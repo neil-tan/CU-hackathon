@@ -83,7 +83,8 @@
             "mbed-cloud-client.update-storage"          : "ARM_UCP_FLASHIAP",
             "storage_tdb_internal.internal_base_address": "(MBED_ROM_START+1024*1024)",
             "storage_tdb_internal.internal_size"        : "(128*1024)",
-            "storage.storage_type"                      : "TDB_INTERNAL"
+            "storage.storage_type"                      : "TDB_INTERNAL",
+            "platform.default-serial-baud-rate"         : 9600
         },
         "UBLOX_EVK_ODIN_W2": {
             "target.network-default-interface-type"     : "WIFI",
