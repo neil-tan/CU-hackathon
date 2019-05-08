@@ -1,7 +1,12 @@
 {
     "macros": [
         "ARM_UC_USE_PAL_BLOCKDEVICE=1",
-        "MBED_BOOTLOADER_SIZE=(32*1024)"
+        "MBED_BOOTLOADER_SIZE=(32*1024)",
+        "CELLULAR_DEVICE=QUECTEL_BC95",
+        "MDMRXD=D0",
+        "MDMTXD=D1",
+        "MDMRTS=NC",
+        "MDMCTS=NC"
     ],
     "target_overrides": {
         "*": {
@@ -10,14 +15,22 @@
             "platform.stdio-convert-newlines"           : true,
             "platform.stdio-buffered-serial"            : true,
             "platform.stdio-flush-at-exit"              : true,
-            "mbed-client-pal.pal-dns-api-version"       : 2,
-            "mbed-cloud-client.external-sst-support"    : 1,
+            "platform.default-serial-baud-rate"         : 9600,
             "nanostack-hal.event_loop_thread_stack_size": 8192,
             "update-client.storage-locations"           : 1,
-            "mbed-trace.enable"                         : null,
+            "mbed-trace.enable"                         : true,
             "nsapi.default-wifi-security"               : "WPA_WPA2",
             "nsapi.default-wifi-ssid"                   : "\"SSID\"",
-            "nsapi.default-wifi-password"               : "\"Password\""
+            "nsapi.default-wifi-password"               : "\"Password\"",
+            "nsapi.default-cellular-apn"                : "\"SNBIOT\"",
+            "nsapi.dns-response-wait-time"              : 30000,
+            "cellular.use-apn-lookup"                   : true,
+            "cellular.debug-at"                         : false,
+            "client_app.pal_dtls_peer_min_timeout"      : "20000",
+            "mbed-cloud-client.external-sst-support"    : 1,
+            "mbed-client.sn-coap-duplication-max-msgs-count": 10,
+            "mbed-client.reconnection-count"            : 3,
+            "mbed-client.reconnection-interval"         : 5
         },
         "STM_EMAC": {
             "lwip.pbuf-pool-size"                       : 16,
@@ -58,7 +71,7 @@
             "storage.storage_type"                      : "TDB_INTERNAL"
         },
         "NUCLEO_F429ZI": {
-            "target.network-default-interface-type"     : "ETHERNET",
+            "target.network-default-interface-type"     : "CELLULAR",
             "target.bootloader_img"                     : "tools/mbed-bootloader-nucleo_f429zi-internal_flash-no_rot-v4.0.0.bin",
             "target.header_offset"                      : "0x8000",
             "target.app_offset"                         : "0x8400",
@@ -70,7 +83,8 @@
             "mbed-cloud-client.update-storage"          : "ARM_UCP_FLASHIAP",
             "storage_tdb_internal.internal_base_address": "(MBED_ROM_START+1024*1024)",
             "storage_tdb_internal.internal_size"        : "(128*1024)",
-            "storage.storage_type"                      : "TDB_INTERNAL"
+            "storage.storage_type"                      : "TDB_INTERNAL",
+            "platform.default-serial-baud-rate"         : 9600
         },
         "UBLOX_EVK_ODIN_W2": {
             "target.network-default-interface-type"     : "WIFI",
@@ -133,6 +147,16 @@
         }
     },
     "config": {
+        "trace-level": {
+            "help": "Options are TRACE_LEVEL_ERROR,TRACE_LEVEL_WARN,TRACE_LEVEL_INFO,TRACE_LEVEL_DEBUG",
+            "macro_name": "MBED_TRACE_MAX_LEVEL",
+            "value": "TRACE_LEVEL_INFO"
+        },
+        "pal-udp-mtu-size": {
+            "help": "Enforced usage of MTU limits",
+            "macro_name": "PAL_UDP_MTU_SIZE",
+            "value": 1358
+        },
         "developer-mode": {
             "help"      : "Enable Developer mode to skip Factory enrollment",
             "options"   : [null, 1],
