@@ -30,14 +30,6 @@
 // event based LED blinker, controlled via pattern_resource
 static Blinky blinky;
 
-static void main_application(void);
-
-
-int main(void)
-{
-    mcc_platform_run_program(main_application);
-}
-
 // Pointers to the resources that will be created in main_application().
 static M2MResource* button_res;
 static M2MResource* pattern_res;
@@ -127,24 +119,24 @@ void factory_reset(void *)
     }
 }
 
-void main_application(void)
+int main(void)
 {
     // Initialize trace-library first
     if (application_init_mbed_trace() != 0) {
         printf("Failed initializing mbed trace\n" );
-        return;
+        return -1;
     }
 
     // Initialize storage
     if (mcc_platform_storage_init() != 0) {
         printf("Failed to initialize storage\n" );
-        return;
+        return -1;
     }
 
     // Initialize platform-specific components
     if(mcc_platform_init() != 0) {
         printf("ERROR - platform_init() failed!\n");
-        return;
+        return -1;
     }
 
     // Print platform information
@@ -154,7 +146,7 @@ void main_application(void)
     if (!mcc_platform_init_connection()) {
         printf("Network initialized, connecting...\n");
     } else {
-        return;
+        return 0;
     }
 
     // Print some statistics of the object sizes and their heap memory consumption.
@@ -171,7 +163,7 @@ void main_application(void)
     //  3. FCC initialization.
     if (!application_init()) {
         printf("Initialization failed, exiting application!\n");
-        return;
+        return -1;
     }
 
     // Save pointer to mbedClient so that other functions can access it.
