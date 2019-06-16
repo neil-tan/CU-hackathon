@@ -30,18 +30,6 @@
 // event based LED blinker, controlled via pattern_resource
 static Blinky blinky;
 
-static void main_application(void);
-
-#if defined(MBED_CLOUD_APPLICATION_NONSTANDARD_ENTRYPOINT)
-extern "C"
-int mbed_cloud_application_entrypoint(void)
-#else
-int main(void)
-#endif
-{
-    return mcc_platform_run_program(main_application);
-}
-
 // Pointers to the resources that will be created in main_application().
 static M2MResource* button_res;
 static M2MResource* pattern_res;
@@ -131,30 +119,24 @@ void factory_reset(void *)
     }
 }
 
-void main_application(void)
+int main(void)
 {
-#if defined(__linux__) && (MBED_CONF_MBED_TRACE_ENABLE == 0)
-        // make sure the line buffering is on as non-trace builds do
-        // not produce enough output to fill the buffer
-        setlinebuf(stdout);
-#endif 
-
     // Initialize trace-library first
     if (application_init_mbed_trace() != 0) {
         printf("Failed initializing mbed trace\n" );
-        return;
+        return -1;
     }
 
     // Initialize storage
     if (mcc_platform_storage_init() != 0) {
         printf("Failed to initialize storage\n" );
-        return;
+        return -1;
     }
 
     // Initialize platform-specific components
     if(mcc_platform_init() != 0) {
         printf("ERROR - platform_init() failed!\n");
-        return;
+        return -1;
     }
 
     // Print platform information
@@ -164,16 +146,13 @@ void main_application(void)
     if (!mcc_platform_init_connection()) {
         printf("Network initialized, connecting...\n");
     } else {
-        return;
+        return 0;
     }
 
     // Print some statistics of the object sizes and their heap memory consumption.
     // NOTE: This *must* be done before creating MbedCloudClient, as the statistic calculation
     // creates and deletes M2MSecurity and M2MDevice singleton objects, which are also used by
     // the MbedCloudClient.
-#ifdef MBED_HEAP_STATS_ENABLED
-    print_m2mobject_stats();
-#endif
 
     // SimpleClient is used for registering and unregistering resources to a server.
     SimpleM2MClient mbedClient;
@@ -184,19 +163,11 @@ void main_application(void)
     //  3. FCC initialization.
     if (!application_init()) {
         printf("Initialization failed, exiting application!\n");
-        return;
+        return -1;
     }
 
     // Save pointer to mbedClient so that other functions can access it.
     client = &mbedClient;
-
-#ifdef MBED_HEAP_STATS_ENABLED
-    printf("Client initialized\r\n");
-    print_heap_stats();
-#endif
-#ifdef MBED_STACK_STATS_ENABLED
-    print_stack_statistics();
-#endif
 
     // Create resource for button count. Path of this resource will be: 3200/0/5501.
     button_res = mbedClient.add_cloud_resource(3200, 0, 5501, "button_resource", M2MResourceInstance::INTEGER,
@@ -222,21 +193,15 @@ void main_application(void)
 
     mbedClient.register_and_connect();
 
-#ifndef MBED_CONF_MBED_CLOUD_CLIENT_DISABLE_CERTIFICATE_ENROLLMENT
-    // Add certificate renewal callback
-    mbedClient.get_cloud_client().on_certificate_renewal(certificate_renewal_cb);
-#endif // MBED_CONF_MBED_CLOUD_CLIENT_DISABLE_CERTIFICATE_ENROLLMENT
-
-
     // Check if client is registering or registered, if true sleep and repeat.
 
-    while (mbedClient.is_register_called()) {
-        static int button_count = 0;
-        mcc_platform_do_wait(100);
-        if (mcc_platform_button_clicked()) {
-            button_res->set_value(++button_count);
+        while (mbedClient.is_register_called()) {
+            static int button_count = 0;
+            mcc_platform_do_wait(100);
+            if (mcc_platform_button_clicked()) {
+                button_res->set_value(++button_count);
+            }
         }
-    }
 
     // Client unregistered, disconnect and exit program.
     mcc_platform_close_connection();
